@@ -33,10 +33,9 @@ struct A2UIDivider: View {
         Group {
             if axis == .vertical {
                 SwiftUI.Divider()
-                    .frame(maxHeight: .infinity)
+                    .rotationEffect(.degrees(90))
             } else {
                 SwiftUI.Divider()
-                    .frame(maxWidth: .infinity)
             }
         }
         .a2uiAccessibility(node.accessibility, dataContext: dc)
