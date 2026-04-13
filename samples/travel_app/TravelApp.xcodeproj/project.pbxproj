@@ -11,9 +11,9 @@
 		F131A2532F78D26E007CCC16 /* Primitives in Frameworks */ = {isa = PBXBuildFile; productRef = F131A2522F78D26E007CCC16 /* Primitives */; };
 		F131A2562F78D26E007CCC16 /* A2UISwiftCore in Frameworks */ = {isa = PBXBuildFile; productRef = F131A2572F78D26E007CCC16 /* A2UISwiftCore */; };
 		F131A2582F78D26E007CCC16 /* A2UISwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = F131A2592F78D26E007CCC16 /* A2UISwiftUI */; };
+		F1TE5T012F87000000000004 /* Primitives in Frameworks */ = {isa = PBXBuildFile; productRef = F1TE5T012F87000000000013 /* Primitives */; };
 		F1TE5T012F87000000000005 /* A2UISwiftCore in Frameworks */ = {isa = PBXBuildFile; productRef = F1TE5T012F87000000000014 /* A2UISwiftCore */; };
 		F1TE5T012F87000000000006 /* A2UISwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = F1TE5T012F87000000000015 /* A2UISwiftUI */; };
-		F1TE5T012F87000000000004 /* Primitives in Frameworks */ = {isa = PBXBuildFile; productRef = F1TE5T012F87000000000013 /* Primitives */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -172,7 +172,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				F131A24F2F78D26E007CCC16 /* XCLocalSwiftPackageReference "../.." */,
-				F131A2A02F78D26E007CCC16 /* XCRemoteSwiftPackageReference "A2A-Swift" */,
+				F131A2A02F78D26E007CCC16 /* XCRemoteSwiftPackageReference "a2a-swift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = F1AE97CA2F5EA2ED00610B17 /* Products */;
@@ -521,17 +521,17 @@
 /* Begin XCLocalSwiftPackageReference section */
 		F131A24F2F78D26E007CCC16 /* XCLocalSwiftPackageReference "../.." */ = {
 			isa = XCLocalSwiftPackageReference;
-			relativePath = "../..";
+			relativePath = ../..;
 		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		F131A2A02F78D26E007CCC16 /* XCRemoteSwiftPackageReference "A2A-Swift" */ = {
+		F131A2A02F78D26E007CCC16 /* XCRemoteSwiftPackageReference "a2a-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/BBC6BAE9/A2A-Swift";
+			repositoryURL = "https://github.com/BBC6BAE9/a2a-swift";
 			requirement = {
-				kind = exactVersion;
-				version = "0.0.1";
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
@@ -539,7 +539,7 @@
 /* Begin XCSwiftPackageProductDependency section */
 		F131A2502F78D26E007CCC16 /* A2A */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = F131A2A02F78D26E007CCC16 /* XCRemoteSwiftPackageReference "A2A-Swift" */;
+			package = F131A2A02F78D26E007CCC16 /* XCRemoteSwiftPackageReference "a2a-swift" */;
 			productName = A2A;
 		};
 		F131A2522F78D26E007CCC16 /* Primitives */ = {
@@ -557,6 +557,11 @@
 			package = F131A24F2F78D26E007CCC16 /* XCLocalSwiftPackageReference "../.." */;
 			productName = A2UISwiftUI;
 		};
+		F1TE5T012F87000000000013 /* Primitives */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F131A24F2F78D26E007CCC16 /* XCLocalSwiftPackageReference "../.." */;
+			productName = Primitives;
+		};
 		F1TE5T012F87000000000014 /* A2UISwiftCore */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = F131A24F2F78D26E007CCC16 /* XCLocalSwiftPackageReference "../.." */;
@@ -566,11 +571,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = F131A24F2F78D26E007CCC16 /* XCLocalSwiftPackageReference "../.." */;
 			productName = A2UISwiftUI;
-		};
-		F1TE5T012F87000000000013 /* Primitives */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = F131A24F2F78D26E007CCC16 /* XCLocalSwiftPackageReference "../.." */;
-			productName = Primitives;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
