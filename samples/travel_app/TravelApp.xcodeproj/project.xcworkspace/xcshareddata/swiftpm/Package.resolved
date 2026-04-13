@@ -1,0 +1,15 @@
+{
+  "originHash" : "5feab8d675813fa9c1275b6329188bb032b363098c70f7395a2893c16b612983",
+  "pins" : [
+    {
+      "identity" : "a2a-swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/BBC6BAE9/A2A-Swift",
+      "state" : {
+        "revision" : "9e27db103399bf17b1673f004eaafd9f3e40a6eb",
+        "version" : "0.0.1"
+      }
+    }
+  ],
+  "version" : 3
+}
