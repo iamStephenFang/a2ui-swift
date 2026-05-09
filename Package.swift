@@ -52,7 +52,12 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/objecthub/swift-dynamicjson.git", from: "1.0.2"),
+        // Upstream SwiftPM manifest is named `FoundationICU`; SPM package id from this URL is `swift-foundation-icu`.
+        // Exported library product is `_FoundationICU` only.
+        .package(
+            url: "https://github.com/swiftlang/swift-foundation-icu.git",
+            revision: "swift-6.3.1-RELEASE"
+        ),
     ],
     targets: [
         .target(
@@ -65,9 +70,10 @@ let package = Package(
         ),
         .target(
             name: "A2UISwiftCore",
-            dependencies: [.product(name: "DynamicJSON", package: "swift-dynamicjson")],
-            path: "Sources/A2UISwiftCore",
-            resources: [.copy("Resources/v0_9")]
+            dependencies: [
+                .product(name: "_FoundationICU", package: "swift-foundation-icu"),
+            ],
+            path: "Sources/A2UISwiftCore"
         ),
         .target(
             name: "A2UISwiftUI",
