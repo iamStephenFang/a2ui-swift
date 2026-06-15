@@ -50,7 +50,7 @@ final class TravelPlannerViewModel {
     private var contextId: String?
 
     func setStreaming(_ enabled: Bool) {
-        (transport as? GeminiTravelTransport)?.supportsStreaming = enabled
+        transport.supportsStreaming = enabled
     }
 
     init(transport: TravelTransport) {
@@ -177,15 +177,29 @@ final class TravelPlannerViewModel {
         // Track which surfaces are newly created vs merely updated
         var newSurfaceIds: [String] = []
         var hasUpdates = false
+        var updatedSurfaceIds: Set<String> = []
+        var messageKinds: [String] = []
         for msg in serverMessages {
             if case .createSurface(let payload) = msg {
+                messageKinds.append("createSurface(\(payload.surfaceId))")
                 if !newSurfaceIds.contains(payload.surfaceId) {
                     newSurfaceIds.append(payload.surfaceId)
                 }
+            } else if case .updateComponents(let payload) = msg {
+                messageKinds.append("updateComponents(\(payload.surfaceId), components=\(payload.components.count))")
+                updatedSurfaceIds.insert(payload.surfaceId)
+                hasUpdates = true
+            } else if case .updateDataModel(let payload) = msg {
+                messageKinds.append("updateDataModel(\(payload.surfaceId))")
+                hasUpdates = true
+            } else if case .deleteSurface(let payload) = msg {
+                messageKinds.append("deleteSurface(\(payload.surfaceId))")
+                hasUpdates = true
             } else {
                 hasUpdates = true
             }
         }
+        print("[TravelVM] Processing A2UI messages: \(messageKinds.joined(separator: ", "))")
 
         // Auto-create surfaces for updateComponents that reference a surface
         // not yet created. In streaming mode, the model may emit updateComponents
@@ -240,6 +254,11 @@ final class TravelPlannerViewModel {
                 surfaceUpdateCounter += 1
                 scrollToBottom()
             }
+            return nil
+        }
+
+        if !newSurfaceIds.isEmpty && updatedSurfaceIds.isEmpty {
+            print("[TravelVM] Received createSurface without updateComponents; not adding an empty surface to chat")
             return nil
         }
 
@@ -365,7 +384,11 @@ final class TravelPlannerViewModel {
     /// Sync the client data model from all surfaces to the transport,
     /// matching Flutter's pattern of including data model in system instructions.
     private func updateClientDataModel() {
-        guard let geminiTransport = transport as? GeminiTravelTransport else { return }
-        geminiTransport.clientDataModel = messageProcessor.getClientDataModel()
+        let clientDataModel = messageProcessor.getClientDataModel()
+        if let geminiTransport = transport as? GeminiTravelTransport {
+            geminiTransport.clientDataModel = clientDataModel
+        } else if let openAICompatibleTransport = transport as? OpenAICompatibleTravelTransport {
+            openAICompatibleTransport.clientDataModel = clientDataModel
+        }
     }
 }

@@ -4,7 +4,8 @@
 
 import Foundation
 import A2UISwiftCore
-import Primitives@testable import TravelApp
+import Primitives
+@testable import TravelApp
 
 /// A fake implementation of `AiClient` for testing.
 ///

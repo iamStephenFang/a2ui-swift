@@ -3,7 +3,8 @@
 // found in the LICENSE file.
 
 import XCTest
-import Primitives@testable import TravelApp
+import Primitives
+@testable import TravelApp
 
 /// Tests for `GoogleGenerativeAiClient`.
 ///

@@ -11,57 +11,59 @@ import XCTest
 /// env var → UserDefaults → hardcoded fallback.
 final class GetApiKeyTests: XCTestCase {
 
-    private let userDefaultsKey = "geminiAPIKey"
+    private let arkUserDefaultsKey = "arkAPIKey"
+    private let geminiUserDefaultsKey = "geminiAPIKey"
 
     override func setUp() {
         super.setUp()
-        UserDefaults.standard.removeObject(forKey: userDefaultsKey)
+        UserDefaults.standard.removeObject(forKey: arkUserDefaultsKey)
+        UserDefaults.standard.removeObject(forKey: geminiUserDefaultsKey)
     }
 
     override func tearDown() {
-        UserDefaults.standard.removeObject(forKey: userDefaultsKey)
+        UserDefaults.standard.removeObject(forKey: arkUserDefaultsKey)
+        UserDefaults.standard.removeObject(forKey: geminiUserDefaultsKey)
         super.tearDown()
     }
 
-    func testResolveReturnsNonEmptyKey() {
-        let key = GetApiKey.resolve()
-        XCTAssertFalse(key.isEmpty, "resolve() should always return a non-empty key")
+    func testResolveReturnsEmptyWhenNoKeyConfigured() {
+        if ProcessInfo.processInfo.environment["ARK_API_KEY"] == nil {
+            XCTAssertEqual(GetApiKey.resolve(provider: .ark), "")
+        }
     }
 
-    func testResolveFallsBackToHardcodedKey() {
-        UserDefaults.standard.removeObject(forKey: userDefaultsKey)
-        let key = GetApiKey.resolve()
-        XCTAssertTrue(
-            key.hasPrefix("AIza"),
-            "Without env var or stored key, should fall back to hardcoded key"
-        )
+    func testResolveUsesArkUserDefaultsWhenSet() {
+        let customKey = "ark-test-api-key-12345"
+        UserDefaults.standard.set(customKey, forKey: arkUserDefaultsKey)
+
+        let key = GetApiKey.resolve(provider: .ark)
+        XCTAssertEqual(key, customKey)
     }
 
-    func testResolveUsesUserDefaultsWhenSet() {
-        let customKey = "test-custom-api-key-12345"
-        UserDefaults.standard.set(customKey, forKey: userDefaultsKey)
+    func testResolveUsesGeminiUserDefaultsWhenSet() {
+        let customKey = "gemini-test-api-key-12345"
+        UserDefaults.standard.set(customKey, forKey: geminiUserDefaultsKey)
 
-        let key = GetApiKey.resolve()
+        let key = GetApiKey.resolve(provider: .gemini)
         XCTAssertEqual(key, customKey)
     }
 
     func testResolveIgnoresEmptyUserDefaults() {
-        UserDefaults.standard.set("   ", forKey: userDefaultsKey)
-        let key = GetApiKey.resolve()
-        XCTAssertNotEqual(key.trimmingCharacters(in: .whitespacesAndNewlines), "")
+        UserDefaults.standard.set("   ", forKey: arkUserDefaultsKey)
+        if ProcessInfo.processInfo.environment["ARK_API_KEY"] == nil {
+            XCTAssertEqual(GetApiKey.resolve(provider: .ark), "")
+        }
     }
 
     func testHasUserProvidedKeyFalseByDefault() {
-        UserDefaults.standard.removeObject(forKey: userDefaultsKey)
-        // Without env var set, this should reflect only UserDefaults state.
-        // In test environments, GEMINI_API_KEY env var is typically not set.
-        if ProcessInfo.processInfo.environment["GEMINI_API_KEY"] == nil {
-            XCTAssertFalse(GetApiKey.hasUserProvidedKey)
+        UserDefaults.standard.removeObject(forKey: arkUserDefaultsKey)
+        if ProcessInfo.processInfo.environment["ARK_API_KEY"] == nil {
+            XCTAssertFalse(GetApiKey.hasUserProvidedKey(provider: .ark))
         }
     }
 
     func testHasUserProvidedKeyTrueWhenStored() {
-        UserDefaults.standard.set("my-key", forKey: userDefaultsKey)
-        XCTAssertTrue(GetApiKey.hasUserProvidedKey)
+        UserDefaults.standard.set("my-key", forKey: arkUserDefaultsKey)
+        XCTAssertTrue(GetApiKey.hasUserProvidedKey(provider: .ark))
     }
 }

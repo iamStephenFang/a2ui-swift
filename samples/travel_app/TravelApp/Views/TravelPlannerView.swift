@@ -252,7 +252,8 @@ var prompt: [String] {
 ///
 /// Mirrors Flutter's `TravelPlannerPage` from `travel_planner_page.dart`.
 struct TravelPlannerView: View {
-    var geminiAPIKey: String = ""
+    var provider: AIProvider = .ark
+    var apiKey: String = ""
     @AppStorage("useStreaming") private var useStreaming = false
 
     @State private var viewModel: TravelPlannerViewModel
@@ -265,15 +266,26 @@ struct TravelPlannerView: View {
     /// default `GeminiTravelTransport` is created.
     ///
     /// Mirrors Flutter's `TravelPlannerPage({this.aiClient, super.key})`.
-    init(geminiAPIKey: String = "") {
-        self.geminiAPIKey = geminiAPIKey
+    init(provider: AIProvider = .ark, apiKey: String = "") {
+        self.provider = provider
+        self.apiKey = apiKey
         let streaming = UserDefaults.standard.bool(forKey: "useStreaming")
-        _viewModel = State(initialValue: TravelPlannerViewModel(
-            transport: GeminiTravelTransport(
-                apiKey: geminiAPIKey,
+        let transport: TravelTransport
+        switch provider {
+        case .ark:
+            transport = OpenAICompatibleTravelTransport(
+                apiKey: apiKey,
+                systemInstruction: prompt
+            )
+        case .gemini:
+            transport = GeminiTravelTransport(
+                apiKey: apiKey,
                 systemInstruction: prompt,
                 useStreaming: streaming
             )
+        }
+        _viewModel = State(initialValue: TravelPlannerViewModel(
+            transport: transport
         ))
     }
 

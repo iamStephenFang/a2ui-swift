@@ -4,27 +4,61 @@
 
 import Foundation
 
-/// Resolves the Gemini API key using a priority chain, mirroring
-/// Flutter's `io_get_api_key.dart`:
-///
-/// 1. Environment variable `GEMINI_API_KEY`
-/// 2. User-entered key stored in UserDefaults (`@AppStorage`)
-enum GetApiKey {
-    private static let environmentKey = "GEMINI_API_KEY"
-    private static let userDefaultsKey = "geminiAPIKey"
+enum AIProvider: String, CaseIterable, Identifiable {
+    case ark
+    case gemini
 
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .ark: return "Ark DeepSeek"
+        case .gemini: return "Gemini"
+        }
+    }
+
+    var environmentKey: String {
+        switch self {
+        case .ark: return "ARK_API_KEY"
+        case .gemini: return "GEMINI_API_KEY"
+        }
+    }
+
+    var userDefaultsKey: String {
+        switch self {
+        case .ark: return "arkAPIKey"
+        case .gemini: return "geminiAPIKey"
+        }
+    }
+
+    var requiredTitle: String {
+        switch self {
+        case .ark: return "Ark API Key Required"
+        case .gemini: return "Gemini API Key Required"
+        }
+    }
+
+    var keyHelpText: String {
+        switch self {
+        case .ark: return "Set ARK_API_KEY in the environment, or enter your Ark API key in Settings."
+        case .gemini: return "Set GEMINI_API_KEY in the environment, or enter your Gemini API key in Settings."
+        }
+    }
+}
+
+/// Resolves API keys using a priority chain:
+///
+/// 1. Provider-specific environment variable
+/// 2. Provider-specific key stored in UserDefaults (`@AppStorage`)
+enum GetApiKey {
     /// Returns the API key if available, or an empty string if not configured.
-    ///
-    /// Checks the process environment first (set via Xcode scheme or CLI),
-    /// then the locally persisted key the user entered in Settings.
-    /// No hardcoded fallback — the user must provide their own key.
-    static func resolve() -> String {
-        if let envKey = ProcessInfo.processInfo.environment[environmentKey],
+    static func resolve(provider: AIProvider = .ark) -> String {
+        if let envKey = ProcessInfo.processInfo.environment[provider.environmentKey],
            !envKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             return envKey
         }
 
-        let stored = UserDefaults.standard.string(forKey: userDefaultsKey) ?? ""
+        let stored = UserDefaults.standard.string(forKey: provider.userDefaultsKey) ?? ""
         if !stored.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             return stored.trimmingCharacters(in: .whitespacesAndNewlines)
         }
@@ -33,7 +67,7 @@ enum GetApiKey {
     }
 
     /// Whether the user has configured a key (env var or UserDefaults).
-    static var hasUserProvidedKey: Bool {
-        !resolve().isEmpty
+    static func hasUserProvidedKey(provider: AIProvider = .ark) -> Bool {
+        !resolve(provider: provider).isEmpty
     }
 }
