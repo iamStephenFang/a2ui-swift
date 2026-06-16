@@ -46,11 +46,14 @@ final class ChatBubbleView: UIView {
 }
 
 final class ImageMessageCardView: UIView {
-    convenience init(text: String, image: UIImage, isUser: Bool) {
-        self.init(title: nil, detail: text, image: image, isUser: isUser)
+    private let onPreview: (() -> Void)?
+
+    convenience init(text: String, image: UIImage, isUser: Bool, onPreview: (() -> Void)? = nil) {
+        self.init(title: nil, detail: text, image: image, isUser: isUser, onPreview: onPreview)
     }
 
-    init(title: String?, detail: String, image: UIImage, isUser: Bool) {
+    init(title: String?, detail: String, image: UIImage, isUser: Bool, onPreview: (() -> Void)? = nil) {
+        self.onPreview = onPreview
         super.init(frame: .zero)
         translatesAutoresizingMaskIntoConstraints = false
 
@@ -60,6 +63,10 @@ final class ImageMessageCardView: UIView {
         imageView.clipsToBounds = true
         imageView.layer.cornerRadius = 14
         imageView.layer.cornerCurve = .continuous
+        imageView.isUserInteractionEnabled = onPreview != nil
+        if onPreview != nil {
+            imageView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(previewTapped)))
+        }
         let imageRatio = image.size.width > 0 ? image.size.height / image.size.width : 1
         let displayRatio = min(max(imageRatio, 0.56), 1.35)
 
@@ -123,5 +130,9 @@ final class ImageMessageCardView: UIView {
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    @objc private func previewTapped() {
+        onPreview?()
     }
 }

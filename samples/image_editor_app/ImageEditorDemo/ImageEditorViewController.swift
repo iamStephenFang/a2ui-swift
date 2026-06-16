@@ -52,6 +52,8 @@ final class ImageEditorViewController: UIViewController {
         selectedImagePreview.layer.cornerRadius = 12
         selectedImagePreview.layer.cornerCurve = .continuous
         selectedImagePreview.isHidden = true
+        selectedImagePreview.isUserInteractionEnabled = true
+        selectedImagePreview.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(selectedPreviewTapped)))
 
         selectImageButton.translatesAutoresizingMaskIntoConstraints = false
         selectImageButton.setImage(UIImage(systemName: "photo.badge.plus"), for: .normal)
@@ -331,7 +333,9 @@ final class ImageEditorViewController: UIViewController {
     }
 
     private func addUserMessage(_ text: String, image: UIImage) {
-        append(ImageMessageCardView(text: text, image: image, isUser: true))
+        append(ImageMessageCardView(text: text, image: image, isUser: true) { [weak self] in
+            self?.showImagePreview(image: image, title: "Selected Image", caption: text)
+        })
     }
 
     private func addAssistantMessage(_ text: String) {
@@ -344,7 +348,9 @@ final class ImageEditorViewController: UIViewController {
             detail: result.detail,
             image: result.image,
             isUser: false
-        ))
+        ) { [weak self] in
+            self?.showImagePreview(image: result.image, title: result.title, caption: result.detail)
+        })
     }
 
     @objc private func selectImageTapped() {
@@ -370,6 +376,16 @@ final class ImageEditorViewController: UIViewController {
             sheet.prefersGrabberVisible = true
         }
         present(navigationController, animated: true)
+    }
+
+    @objc private func selectedPreviewTapped() {
+        guard let image = pendingSelectedImage else { return }
+        showImagePreview(image: image, title: "Selected Image", caption: "This image is ready to send with your next edit request.")
+    }
+
+    private func showImagePreview(image: UIImage, title: String? = nil, caption: String? = nil) {
+        let preview = ImagePreviewViewController(image: image, title: title, caption: caption)
+        navigationController?.pushViewController(preview, animated: true)
     }
 
     private func renderA2UISurfaces(_ messages: [A2uiMessage]) {
