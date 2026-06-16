@@ -2,8 +2,64 @@ import A2UISwiftCore
 import Foundation
 
 enum ImageEditorA2UIContent {
-    static func controlCard() -> [A2uiMessage] {
-        let surfaceId = "edit_controls_\(UUID().uuidString)"
+    static func filterCard() -> [A2uiMessage] {
+        choiceCard(
+            surfacePrefix: "filter_controls",
+            title: "Choose a Filter",
+            body: "Pick the look you want to apply to the current image.",
+            path: "/selectedFilter",
+            initialValue: ImageFilter.vivid.rawValue,
+            label: "Filter",
+            options: ImageFilter.allCases.map { ($0.title, $0.rawValue) },
+            buttonTitle: "Apply Filter",
+            operation: .filter,
+            contextKey: "filter"
+        )
+    }
+
+    static func brightnessCard() -> [A2uiMessage] {
+        choiceCard(
+            surfacePrefix: "brightness_controls",
+            title: "Adjust Brightness",
+            body: "Choose how much brighter the image should become.",
+            path: "/selectedBrightness",
+            initialValue: BrightnessLevel.medium.rawValue,
+            label: "Brightness",
+            options: BrightnessLevel.allCases.map { ($0.title, $0.rawValue) },
+            buttonTitle: "Apply Brightness",
+            operation: .brightness,
+            contextKey: "brightness"
+        )
+    }
+
+    static func cropCard() -> [A2uiMessage] {
+        choiceCard(
+            surfacePrefix: "crop_controls",
+            title: "Choose Crop Ratio",
+            body: "Select the output composition for the current image.",
+            path: "/selectedCropRatio",
+            initialValue: ImageCropRatio.square.rawValue,
+            label: "Ratio",
+            options: ImageCropRatio.allCases.map { ($0.title, $0.rawValue) },
+            buttonTitle: "Apply Crop",
+            operation: .crop,
+            contextKey: "cropRatio"
+        )
+    }
+
+    private static func choiceCard(
+        surfacePrefix: String,
+        title: String,
+        body: String,
+        path: String,
+        initialValue: String,
+        label: String,
+        options: [(String, String)],
+        buttonTitle: String,
+        operation: ImageEditOperation,
+        contextKey: String
+    ) -> [A2uiMessage] {
+        let surfaceId = "\(surfacePrefix)_\(UUID().uuidString)"
         return [
             .createSurface(CreateSurfacePayload(
                 surfaceId: surfaceId,
@@ -12,48 +68,45 @@ enum ImageEditorA2UIContent {
             )),
             .updateDataModel(UpdateDataModelPayload(
                 surfaceId: surfaceId,
-                path: "/selectedFilter",
-                value: .array([.string(ImageFilter.vivid.rawValue)])
+                path: path,
+                value: .array([.string(initialValue)])
             )),
             .updateComponents(UpdateComponentsPayload(
                 surfaceId: surfaceId,
                 components: [
                     component("root", "Card", ["child": .string("content")]),
                     component("content", "Column", [
-                        "children": .array(["title", "body", "filter_picker", "button_row"].map(AnyCodable.string)),
+                        "children": .array(["title", "body", "picker", "apply_button"].map(AnyCodable.string)),
                         "align": .string("stretch"),
                     ]),
                     component("title", "Text", [
-                        "text": .string("On-device image edits"),
+                        "text": .string(title),
                         "variant": .string("h3"),
                     ]),
                     component("body", "Text", [
-                        "text": .string("Choose a quick edit. The image processing runs locally with UIKit and Core Image; A2UI only describes the controls."),
+                        "text": .string(body),
                     ]),
-                    component("filter_picker", "ChoicePicker", [
-                        "label": .string("Filter"),
-                        "options": .array(ImageFilter.allCases.map {
+                    component("picker", "ChoicePicker", [
+                        "label": .string(label),
+                        "options": .array(options.map {
                             .dictionary([
-                                "label": .string($0.title),
-                                "value": .string($0.rawValue),
+                                "label": .string($0.0),
+                                "value": .string($0.1),
                             ])
                         }),
-                        "value": dataBinding("/selectedFilter"),
+                        "value": dataBinding(path),
                         "displayStyle": .string("chips"),
                         "variant": .string("mutuallyExclusive"),
                     ]),
-                    component("button_row", "Row", [
-                        "children": .array(["apply_filter", "brighten", "crop_square", "reset"].map(AnyCodable.string)),
-                        "align": .string("center"),
-                    ]),
-                    button("apply_filter", titleId: "apply_filter_text", title: "Apply Filter", operation: .filter, filterPath: "/selectedFilter"),
-                    text("apply_filter_text", "Apply Filter"),
-                    button("brighten", titleId: "brighten_text", title: "Brighten", operation: .brighten),
-                    text("brighten_text", "Brighten"),
-                    button("crop_square", titleId: "crop_square_text", title: "Square Crop", operation: .squareCrop),
-                    text("crop_square_text", "Square Crop"),
-                    button("reset", titleId: "reset_text", title: "Reset", operation: .reset),
-                    text("reset_text", "Reset"),
+                    button(
+                        "apply_button",
+                        titleId: "apply_button_text",
+                        title: buttonTitle,
+                        operation: operation,
+                        contextKey: contextKey,
+                        valuePath: path
+                    ),
+                    text("apply_button_text", buttonTitle),
                 ]
             )),
         ]
@@ -92,17 +145,18 @@ enum ImageEditorA2UIContent {
         titleId: String,
         title: String,
         operation: ImageEditOperation,
-        filterPath: String? = nil
+        contextKey: String? = nil,
+        valuePath: String? = nil
     ) -> RawComponent {
         var context: [String: AnyCodable] = [
             "operation": .string(operation.rawValue),
         ]
-        if let filterPath {
-            context["filter"] = dataBinding(filterPath)
+        if let contextKey, let valuePath {
+            context[contextKey] = dataBinding(valuePath)
         }
         return component(id, "Button", [
             "child": .string(titleId),
-            "variant": operation == .filter ? .string("primary") : .string("bordered"),
+            "variant": .string("primary"),
             "action": .dictionary([
                 "event": .dictionary([
                     "name": .string("applyEdit"),

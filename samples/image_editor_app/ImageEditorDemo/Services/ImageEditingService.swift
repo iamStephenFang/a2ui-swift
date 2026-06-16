@@ -3,45 +3,67 @@ import UIKit
 
 final class ImageEditingService {
     private let context = CIContext()
-    private(set) var originalImage: UIImage
-    private(set) var currentImage: UIImage
+    private(set) var originalImage: UIImage?
+    private(set) var currentImage: UIImage?
 
     init() {
-        let image = Self.makeSampleImage()
-        self.originalImage = image
-        self.currentImage = image
+        self.originalImage = nil
+        self.currentImage = nil
     }
 
-    func apply(operation: ImageEditOperation, filter: ImageFilter? = nil) -> ImageEditResult {
+    var hasImage: Bool {
+        currentImage != nil
+    }
+
+    func replaceImage(_ image: UIImage) {
+        originalImage = image
+        currentImage = image
+    }
+
+    func apply(
+        operation: ImageEditOperation,
+        filter: ImageFilter? = nil,
+        brightness: BrightnessLevel? = nil,
+        cropRatio: ImageCropRatio? = nil
+    ) -> ImageEditResult? {
+        guard let image = currentImage else { return nil }
+
         switch operation {
         case .filter:
             let selectedFilter = filter ?? .vivid
-            currentImage = applyFilter(selectedFilter, to: currentImage)
+            currentImage = applyFilter(selectedFilter, to: image)
             return ImageEditResult(
                 title: "Applied \(selectedFilter.title)",
                 detail: "The image was processed locally with Core Image.",
-                image: currentImage
+                image: currentImage ?? image
             )
-        case .brighten:
-            currentImage = applyColorControls(to: currentImage, brightness: 0.16, contrast: 1.04, saturation: 1.08)
+        case .brightness:
+            let level = brightness ?? .medium
+            currentImage = applyColorControls(
+                to: image,
+                brightness: level.adjustment,
+                contrast: 1.04,
+                saturation: 1.08
+            )
             return ImageEditResult(
-                title: "Brightness Increased",
+                title: "\(level.title) Brightness",
                 detail: "Brightness, contrast, and saturation were adjusted on device.",
-                image: currentImage
+                image: currentImage ?? image
             )
-        case .squareCrop:
-            currentImage = cropToSquare(currentImage)
+        case .crop:
+            let ratio = cropRatio ?? .square
+            currentImage = crop(image, to: ratio)
             return ImageEditResult(
-                title: "Cropped to Square",
-                detail: "The longest edge was trimmed from the center for a square composition.",
-                image: currentImage
+                title: "\(ratio.title) Crop",
+                detail: "The image was center-cropped to \(ratio.title.lowercased()).",
+                image: currentImage ?? image
             )
         case .reset:
             currentImage = originalImage
             return ImageEditResult(
                 title: "Reset Image",
-                detail: "Restored the original local sample image.",
-                image: currentImage
+                detail: "Restored the original image you selected.",
+                image: currentImage ?? image
             )
         }
     }
@@ -100,20 +122,34 @@ final class ImageEditingService {
         return UIImage(cgImage: cgImage, scale: scale, orientation: orientation)
     }
 
-    private func cropToSquare(_ image: UIImage) -> UIImage {
+    private func crop(_ image: UIImage, to ratio: ImageCropRatio) -> UIImage {
         guard let cgImage = image.cgImage else { return image }
-        let side = min(cgImage.width, cgImage.height)
+        let sourceWidth = CGFloat(cgImage.width)
+        let sourceHeight = CGFloat(cgImage.height)
+        let sourceRatio = sourceWidth / sourceHeight
+        let targetRatio = ratio.widthToHeight
+        let cropWidth: CGFloat
+        let cropHeight: CGFloat
+
+        if sourceRatio > targetRatio {
+            cropHeight = sourceHeight
+            cropWidth = cropHeight * targetRatio
+        } else {
+            cropWidth = sourceWidth
+            cropHeight = cropWidth / targetRatio
+        }
+
         let rect = CGRect(
-            x: (cgImage.width - side) / 2,
-            y: (cgImage.height - side) / 2,
-            width: side,
-            height: side
+            x: (sourceWidth - cropWidth) / 2,
+            y: (sourceHeight - cropHeight) / 2,
+            width: cropWidth,
+            height: cropHeight
         )
         guard let cropped = cgImage.cropping(to: rect) else { return image }
         return UIImage(cgImage: cropped, scale: image.scale, orientation: image.imageOrientation)
     }
 
-    private static func makeSampleImage() -> UIImage {
+    static func makePlaceholderImage() -> UIImage {
         let size = CGSize(width: 960, height: 640)
         let renderer = UIGraphicsImageRenderer(size: size)
         return renderer.image { context in
